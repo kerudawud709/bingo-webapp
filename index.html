@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yeketema Bingo</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      background-color: #17212b;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
+    .bingo-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      max-width: 320px;
+      margin: 20px auto;
+    }
+    .cell {
+      background: #232e3c;
+      border: 2px solid #3b4c5f;
+      border-radius: 8px;
+      padding: 15px 0;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    .cell.selected {
+      background-color: #31b545;
+    }
+    .btn {
+      background-color: #5288c1;
+      color: #ffffff;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      width: 100%;
+      max-width: 320px;
+    }
+  </style>
+</head>
+<body>
+  <h2>🎲 Yeketema Bingo</h2>
+  <div class="bingo-grid" id="grid"></div>
+  <button class="btn" onclick="claimBingo()">Claim Bingo! 🏆</button>
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    const nums = ["03","23","33","59","75","12","26","45","51","64","01","28","⭐","56","69","08","22","35","54","66","06","27","32","57","70"];
+    const grid = document.getElementById("grid");
+    nums.forEach(n => {
+      const d = document.createElement("div");
+      d.className = "cell";
+      d.innerText = n;
+      d.onclick = () => d.classList.toggle("selected");
+      grid.appendChild(d);
+    });
+    function claimBingo() { tg.close(); }
+  </script>
+</body>
+</html>
