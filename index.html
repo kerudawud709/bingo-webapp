@@ -1,141 +1,415 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Yeketema Bingo</title>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
+
     <style>
+
         body {
-            font-family: system-ui, -apple-system, sans-serif;
+
+            font-family:
+                system-ui,
+                -apple-system,
+                sans-serif;
+
             background: #0f172a;
+
             color: white;
+
             text-align: center;
+
             margin: 0;
+
             padding: 16px;
+
         }
 
-        .card-header {
-            font-size: 1.2rem;
+
+        .title {
+
+            font-size: 1.4rem;
+
             font-weight: bold;
-            margin-bottom: 12px;
+
+            margin-bottom: 18px;
+
         }
+
+
+        /* ==========================
+           CARTELA SELECTION
+           ========================== */
+
+        #cartela-screen {
+
+            display: block;
+
+        }
+
+
+        .selection-title {
+
+            font-size: 1.1rem;
+
+            margin-bottom: 15px;
+
+        }
+
+
+        .cartela-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(5, 1fr);
+
+            gap: 8px;
+
+            max-width: 360px;
+
+            margin: 0 auto;
+
+        }
+
+
+        .cartela-button {
+
+            background: #1e293b;
+
+            color: white;
+
+            border: 1px solid #334155;
+
+            border-radius: 9px;
+
+            padding: 14px 5px;
+
+            font-size: 1rem;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+        }
+
+
+        .cartela-button:active {
+
+            background: #2563eb;
+
+        }
+
+
+        .cartela-button.unavailable {
+
+            background: #334155;
+
+            color: #64748b;
+
+            text-decoration: line-through;
+
+            cursor: not-allowed;
+
+        }
+
+
+        /* ==========================
+           BINGO SCREEN
+           ========================== */
+
+        #game-screen {
+
+            display: none;
+
+        }
+
+
+        .card-number {
+
+            font-size: 1rem;
+
+            font-weight: bold;
+
+            margin-bottom: 12px;
+
+        }
+
 
         .drawn-container {
+
             background: #1e293b;
+
             padding: 12px;
+
             border-radius: 12px;
+
             margin-bottom: 16px;
+
         }
+
 
         #drawn-box {
+
             font-size: 2.8rem;
+
             color: #38bdf8;
+
             font-weight: bold;
+
         }
+
 
         .grid {
+
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+
+            grid-template-columns:
+                repeat(5, 1fr);
+
             gap: 8px;
+
             max-width: 340px;
+
             margin: 0 auto 20px auto;
+
         }
+
 
         .cell {
+
             background: #1e293b;
+
             aspect-ratio: 1;
+
             display: flex;
+
             align-items: center;
+
             justify-content: center;
+
             border-radius: 8px;
+
             font-weight: bold;
+
             font-size: 1.1rem;
+
             border: 1px solid #334155;
+
         }
+
 
         .cell.marked {
+
             background: #22c55e;
+
             border-color: #4ade80;
+
             color: #052e16;
+
         }
+
 
         .cell.star {
+
             background: #eab308;
+
             border-color: #fde047;
+
             color: #422006;
+
         }
 
-        button {
+
+        .claim-button {
+
             background: #2563eb;
+
             color: white;
+
             border: none;
+
             padding: 14px;
+
             font-size: 1.1rem;
+
             border-radius: 10px;
+
             width: 100%;
+
             max-width: 340px;
+
             font-weight: bold;
+
             cursor: pointer;
+
         }
 
-        button:active {
-            background: #1d4ed8;
+
+        .back-button {
+
+            background: #475569;
+
+            color: white;
+
+            border: none;
+
+            padding: 10px 16px;
+
+            border-radius: 8px;
+
+            margin-bottom: 15px;
+
+            cursor: pointer;
+
         }
+
     </style>
+
 </head>
+
 
 <body>
 
-    <div class="card-header">
+
+    <div class="title">
+
         🎲 Yeketema Bingo
+
     </div>
 
-    <div class="drawn-container">
 
-        <small style="color: #94a3b8;">
-            CURRENT NUMBER
-        </small>
+    <!-- ==================================
+         CARTELA SELECTION SCREEN
+         ================================== -->
 
-        <div id="drawn-box">
-            --
+    <div id="cartela-screen">
+
+        <div class="selection-title">
+
+            🎫 Choose Your Cartela
+
+        </div>
+
+
+        <div
+            id="cartela-grid"
+            class="cartela-grid"
+        >
+
         </div>
 
     </div>
 
 
-    <div class="grid" id="bingo-grid"></div>
+
+    <!-- ==================================
+         GAME SCREEN
+         ================================== -->
+
+    <div id="game-screen">
 
 
-    <button onclick="claimBingo()">
-        Claim Bingo! 🏆
-    </button>
+        <button
+            class="back-button"
+            onclick="backToCartelas()"
+        >
+
+            ← Change Cartela
+
+        </button>
+
+
+        <div
+            id="selected-card-number"
+            class="card-number"
+        >
+
+            Cartela --
+
+        </div>
+
+
+        <div class="drawn-container">
+
+            <small
+                style="color: #94a3b8;"
+            >
+
+                CURRENT NUMBER
+
+            </small>
+
+
+            <div id="drawn-box">
+
+                --
+
+            </div>
+
+        </div>
+
+
+        <div
+            class="grid"
+            id="bingo-grid"
+        >
+
+        </div>
+
+
+        <button
+            class="claim-button"
+            onclick="claimBingo()"
+        >
+
+            Claim Bingo! 🏆
+
+        </button>
+
+    </div>
+
 
 
     <script>
+
 
         // =====================================
         // TELEGRAM
         // =====================================
 
-        const tg = window.Telegram?.WebApp;
+        const tg =
+            window.Telegram?.WebApp;
+
 
         if (tg) {
+
             tg.expand();
+
         }
 
 
         // =====================================
-        // CONNECT TO RENDER
+        // SOCKET.IO
         // =====================================
 
-        const socket = io(
-            "https://bingo-backend-7rt0.onrender.com"
-        );
+        const socket =
+            io(
+                "https://bingo-backend-7rt0.onrender.com"
+            );
 
 
         // =====================================
@@ -144,132 +418,214 @@
 
         let myCard = [];
 
+        let myCartelaNumber = null;
 
-        // =====================================
-        // RECEIVE SERVER-GENERATED CARTELA
-        // =====================================
-
-        socket.on("your_card", (data) => {
-
-            console.log("My cartela:", data.card);
-
-            myCard = data.card;
-
-            renderGrid();
-
-        });
 
 
         // =====================================
-        // DRAWN NUMBER
+        // SHOW CARTELA LIST
         // =====================================
 
-        socket.on("number_drawn", (data) => {
+        socket.on(
+            "cartela_list",
+            (data) => {
 
-            const number = data.number;
-
-            document.getElementById("drawn-box").innerText =
-                number < 10
-                    ? "0" + number
-                    : number;
-
-
-            markNumber(number);
-
-        });
-
-
-        // =====================================
-        // INITIAL GAME STATE
-        // =====================================
-
-        socket.on("init_state", (data) => {
-
-            console.log(
-                "Previous numbers:",
-                data.drawnNumbers
-            );
-
-
-            // If numbers were already called
-            // before this player joined,
-            // mark them on the cartela.
-
-            if (myCard.length > 0) {
-
-                data.drawnNumbers.forEach(number => {
-
-                    markNumber(number);
-
-                });
-
-            }
-
-
-            // Display most recent number
-
-            if (data.drawnNumbers.length > 0) {
-
-                const lastNumber =
-                    data.drawnNumbers[
-                        data.drawnNumbers.length - 1
-                    ];
-
-                document.getElementById(
-                    "drawn-box"
-                ).innerText =
-                    lastNumber < 10
-                        ? "0" + lastNumber
-                        : lastNumber;
-
-            }
-
-        });
-
-
-        // =====================================
-        // MARK NUMBER ON CARTELA
-        // =====================================
-
-        function markNumber(number) {
-
-            const cell =
-                document.getElementById(
-                    `cell-${number}`
+                showCartelaList(
+                    data.cartelas
                 );
 
-            if (cell) {
+            }
+        );
 
-                cell.classList.add("marked");
+
+
+        // =====================================
+        // DISPLAY CARTELA BUTTONS
+        // =====================================
+
+        function showCartelaList(
+            available
+        ) {
+
+            const container =
+                document.getElementById(
+                    "cartela-grid"
+                );
+
+
+            container.innerHTML = "";
+
+
+            for (
+                let i = 1;
+                i <= 75;
+                i++
+            ) {
+
+                const button =
+                    document.createElement(
+                        "button"
+                    );
+
+
+                button.innerText =
+                    i;
+
+
+                button.className =
+                    "cartela-button";
+
+
+                if (
+                    !available.includes(i)
+                ) {
+
+                    button.classList.add(
+                        "unavailable"
+                    );
+
+                    button.disabled =
+                        true;
+
+                }
+
+                else {
+
+                    button.onclick =
+                        () => {
+
+                            selectCartela(i);
+
+                        };
+
+                }
+
+
+                container.appendChild(
+                    button
+                );
 
             }
 
         }
 
 
+
         // =====================================
-        // DISPLAY CARTELA
+        // SELECT CARTELA
+        // =====================================
+
+        function selectCartela(number) {
+
+            socket.emit(
+                "select_cartela",
+                number
+            );
+
+        }
+
+
+
+        // =====================================
+        // CARTELA SELECTED
+        // =====================================
+
+        socket.on(
+            "cartela_selected",
+            (data) => {
+
+                myCartelaNumber =
+                    data.number;
+
+                myCard =
+                    data.card;
+
+
+                document.getElementById(
+                    "selected-card-number"
+                ).innerText =
+                    "🎫 Cartela " +
+                    myCartelaNumber;
+
+
+                document.getElementById(
+                    "cartela-screen"
+                ).style.display =
+                    "none";
+
+
+                document.getElementById(
+                    "game-screen"
+                ).style.display =
+                    "block";
+
+
+                renderGrid();
+
+            }
+        );
+
+
+
+        // =====================================
+        // CARTELA AVAILABILITY
+        // =====================================
+
+        socket.on(
+            "cartela_availability",
+            (data) => {
+
+                // Only update the selection
+                // screen if we're looking at it.
+
+                if (
+                    document.getElementById(
+                        "cartela-screen"
+                    ).style.display !==
+                    "none"
+                ) {
+
+                    showCartelaList(
+                        data.available
+                    );
+
+                }
+
+            }
+        );
+
+
+
+        // =====================================
+        // CARTELA ERROR
+        // =====================================
+
+        socket.on(
+            "cartela_error",
+            (data) => {
+
+                alert(
+                    data.message
+                );
+
+            }
+        );
+
+
+
+        // =====================================
+        // RENDER BINGO CARD
         // =====================================
 
         function renderGrid() {
 
-            const gridEl =
+            const grid =
                 document.getElementById(
                     "bingo-grid"
                 );
 
 
-            gridEl.innerHTML = "";
-
-
-            // Server sends a 5 × 5 array.
-            // Example:
-            //
-            // [
-            //   [1, 20, 33, 48, 70],
-            //   [5, 22, 35, 50, 72],
-            //   ...
-            // ]
+            grid.innerHTML = "";
 
 
             for (
@@ -294,18 +650,15 @@
                         );
 
 
-                    // FREE SPACE
-
                     if (number === 0) {
 
                         cell.className =
                             "cell star marked";
 
-                        cell.innerText = "★";
+                        cell.innerText =
+                            "★";
 
                     }
-
-                    // NORMAL NUMBER
 
                     else {
 
@@ -318,12 +671,14 @@
                                 : number;
 
                         cell.id =
-                            `cell-${number}`;
+                            "cell-" + number;
 
                     }
 
 
-                    gridEl.appendChild(cell);
+                    grid.appendChild(
+                        cell
+                    );
 
                 }
 
@@ -332,83 +687,156 @@
         }
 
 
+
+        // =====================================
+        // NUMBER DRAWN
+        // =====================================
+
+        socket.on(
+            "number_drawn",
+            (data) => {
+
+                const number =
+                    data.number;
+
+
+                document.getElementById(
+                    "drawn-box"
+                ).innerText =
+                    number < 10
+                        ? "0" + number
+                        : number;
+
+
+                markNumber(
+                    number
+                );
+
+            }
+        );
+
+
+
+        // =====================================
+        // MARK NUMBER
+        // =====================================
+
+        function markNumber(number) {
+
+            const cell =
+                document.getElementById(
+                    "cell-" + number
+                );
+
+
+            if (cell) {
+
+                cell.classList.add(
+                    "marked"
+                );
+
+            }
+
+        }
+
+
+
         // =====================================
         // GAME STARTED
         // =====================================
 
-        socket.on("game_started", () => {
+        socket.on(
+            "game_started",
+            () => {
 
-            console.log(
-                "🎱 Bingo game started!"
-            );
+                console.log(
+                    "🎱 Game started!"
+                );
 
-        });
+            }
+        );
+
 
 
         // =====================================
         // GAME FINISHED
         // =====================================
 
-        socket.on("game_finished", () => {
+        socket.on(
+            "game_finished",
+            () => {
 
-            alert(
-                "🎱 All 75 numbers have been called."
-            );
+                alert(
+                    "🎱 All 75 numbers have been called."
+                );
 
-        });
+            }
+        );
+
 
 
         // =====================================
         // BINGO RESULT
         // =====================================
 
-        socket.on("game_over", (data) => {
+        socket.on(
+            "game_over",
+            (data) => {
 
-            if (data.winner === socket.id) {
+                if (
+                    data.winner ===
+                    socket.id
+                ) {
 
-                if (data.fullCard) {
+                    if (data.fullCard) {
 
-                    alert(
-                        "🏆 BINGO!\n\n" +
-                        "🎁 FULL CARTELA BONUS!"
-                    );
+                        alert(
+                            "🏆 BINGO!\n\n" +
+                            "🎁 FULL CARTELA BONUS!"
+                        );
+
+                    }
+
+                    else {
+
+                        alert(
+                            "🏆 BINGO!\n\n" +
+                            "You completed 2 lines!"
+                        );
+
+                    }
 
                 }
 
                 else {
 
                     alert(
-                        "🏆 BINGO!\n\n" +
-                        "You completed 2 lines!"
+                        "🏆 GAME OVER!\n\n" +
+                        "Another player won."
                     );
 
                 }
 
             }
+        );
 
-            else {
-
-                alert(
-                    "🏆 GAME OVER!\n\n" +
-                    "Another player won."
-                );
-
-            }
-
-        });
 
 
         // =====================================
         // FALSE BINGO
         // =====================================
 
-        socket.on("false_alarm", (data) => {
+        socket.on(
+            "false_alarm",
+            (data) => {
 
-            alert(
-                data.message
-            );
+                alert(
+                    data.message
+                );
 
-        });
+            }
+        );
+
 
 
         // =====================================
@@ -417,13 +845,34 @@
 
         function claimBingo() {
 
-            // We DO NOT send the cartela.
-            //
-            // The server already knows
-            // which cartela belongs to us.
-
             socket.emit(
                 "claim_bingo"
+            );
+
+        }
+
+
+
+        // =====================================
+        // BACK TO CARTELA SELECTION
+        // =====================================
+
+        function backToCartelas() {
+
+            document.getElementById(
+                "game-screen"
+            ).style.display =
+                "none";
+
+
+            document.getElementById(
+                "cartela-screen"
+            ).style.display =
+                "block";
+
+
+            socket.emit(
+                "request_cartelas"
             );
 
         }
@@ -431,4 +880,5 @@
     </script>
 
 </body>
-    </html>
+
+</html>
