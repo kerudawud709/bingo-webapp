@@ -39,17 +39,16 @@
         // Replace the URL below with your actual Render URL once backend is live
         const socket = io("https://bingo-backend-7rt0.onrender.com");
 
+let myCard = [];
 
-        let myCard = generateBingoCard();
+socket.on("your_card", (data) => {
 
-        function generateBingoCard() {
-            const cols = [
-                getRandomNums(1, 15, 5),
-                getRandomNums(16, 30, 5),
-                getRandomNums(31, 45, 5),
-                getRandomNums(46, 60, 5),
-                getRandomNums(61, 75, 5)
-            ];
+    myCard = data.card;
+
+    renderGrid();
+
+});
+        
             cols[2][2] = 0; // Free Space in middle
             
             let card = [];
@@ -91,18 +90,44 @@
         });
 
         socket.on("game_over", (data) => {
-            alert("🎉 Bingo! Winner: " + data.winner);
-        });
+
+    if (data.winner === socket.id) {
+
+        if (data.fullCard) {
+
+            alert(
+                "🏆 BINGO!\n\n" +
+                "🎁 FULL CARTELA BONUS!"
+            );
+
+        } else {
+
+            alert(
+                "🏆 BINGO!\n\n" +
+                "You completed 2 lines!"
+            );
+
+        }
+
+    } else {
+
+        alert(
+            "🏆 Game Over!\n\n" +
+            "Another player won."
+        );
+
+    }
+
+});
 
         socket.on("false_alarm", (data) => {
             alert(data.message);
         });
 
         function claimBingo() {
-            socket.emit("claim_bingo", myCard);
+    socket.emit("claim_bingo");
         }
 
-        renderGrid();
     </script>
 </body>
 </html>
