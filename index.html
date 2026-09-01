@@ -308,56 +308,151 @@
                         cell.className = "cell star marked";
                         cell.innerText = "★";
                     } else {
-                        cell.className = "cell";
-                        cell.innerText = number < 10 ? "0" + number : number;
-                        cell.id = "cell-" + number;
-                        cell.onclick = () => {
-                            if (drawnHistory.includes(number)) {
-                                cell.classList.toggle("marked");
-                            }
-                        };
-                    }
-                    grid.appendChild(cell);
-                }
-            }
+<script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) tg.expand();
+
+    const socket = io("https://bingo-backend-7rt0.onrender.com");
+
+    const MY_TELEGRAM_ID = tg?.initDataUnsafe?.user?.id || 5486724656;
+
+    socket.on("connect", () => {
+        socket.emit("authenticate", MY_TELEGRAM_ID);
+    });
+
+    socket.on("account_data", (data) => {
+        // Show admin panel only if admin ID matches
+        if (data.isAdmin || String(MY_TELEGRAM_ID) === "5486724656") {
+            document.getElementById("admin-panel").style.display = "block";
         }
+    });
 
-        socket.on("number_drawn", (data) => {
-            drawnHistory.push(data.number);
-            const display = data.display || (data.number < 10 ? "0" + data.number : data.number);
-            document.getElementById("drawn-box").innerText = display;
+    socket.on("prize_pool_update", (data) => {
+        document.getElementById("prize-amount").innerText = parseFloat(data.prize).toFixed(2);
+    });
 
-            const isAutoMark = document.getElementById("automark-toggle").checked;
-            if (isAutoMark) {
-                markNumber(data.number);
-            }
-        });
+    function adminStartGame() { socket.emit("admin_start_game"); }
+    function adminTogglePause() { socket.emit("admin_toggle_pause"); }
+    function adminSetSpeed(val) { socket.emit("admin_set_speed", val); }
 
-        function markNumber(number) {
-            const cell = document.getElementById("cell-" + number);
-            if (cell) cell.classList.add("marked");
-        }
+    socket.on("admin_success", (data) => alert(data.message));
+    socket.on("game_pause_status", (data) => alert(data.isPaused ? "⏸️ Game Paused" : "▶️ Game Resumed"));
 
-        socket.on("game_started", () => { drawnHistory = []; });
-        socket.on("game_finished", () => alert("🎱 All 75 numbers have been called."));
+    let myCard = [];
+    let myCartelaNumber = null;
+    let drawnHistory = [];
 
-        socket.on("game_over", (data) => {
-            if (data.winner === socket.id) {
-                alert(data.fullCard ? "🏆 BINGO!\n\n🎁 FULL CARTELA BONUS!" : "🏆 BINGO!\n\nYou completed 2 lines!");
+    socket.on("cartela_list", (data) => showCartelaList(data.cartelas));
+
+    function showCartelaList(available) {
+        const container = document.getElementById("cartela-grid");
+        container.innerHTML = "";
+        for (let i = 1; i <= 75; i++) {
+            const button = document.createElement("button");
+            button.innerText = i;
+            button.className = "cartela-button";
+            if (!available.includes(i)) {
+                button.classList.add("unavailable");
+                button.disabled = true;
             } else {
-                alert("🏆 GAME OVER!\n\nAnother player won.");
+                button.onclick = () => selectCartela(i);
             }
+            container.appendChild(button);
+        }
+    }
+
+    function selectCartela(number) {
+        socket.emit("select_cartela", number);
+    }
+
+    // THIS UNLOCKS ANY SELECTED CARTELA TO OPEN PROPERLY
+    socket.on("cartela_selected", (data) => {
+        myCartelaNumber = data.number;
+        myCard = data.card;
+        document.getElementById("selected-card-number").innerText = "🎫 Cartela " + myCartelaNumber;
+        document.getElementById("cartela-screen").style.display = "none";
+        document.getElementById("game-screen").style.display = "block";
+        renderGrid();
+    });
+
+    socket.on("cartela_availability", (data) => {
+        if (document.getElementById("cartela-screen").style.display !== "none") {
+            showCartelaList(data.available);
+        }
+    });
+
+    socket.on("cartela_error", (data) => alert(data.message));
+
+    function renderGrid() {
+        const grid = document.getElementById("bingo-grid");
+        grid.innerHTML = "";
+
+        ['B', 'I', 'N', 'G', 'O'].forEach(letter => {
+            const headerCell = document.createElement("div");
+            headerCell.className = "header-cell";
+            headerCell.innerText = letter;
+            grid.appendChild(headerCell);
         });
 
-        socket.on("false_alarm", (data) => alert(data.message));
+        for (let row = 0; row < 5; row++) {
+            for (let col = 0; col < 5; col++) {
+                const number = myCard[row][col];
+                const cell = document.createElement("div");
 
-        function claimBingo() { socket.emit("claim_bingo"); }
-
-        function backToCartelas() {
-            document.getElementById("game-screen").style.display = "none";
-            document.getElementById("cartela-screen").style.display = "block";
-            socket.emit("request_cartelas");
+                if (number === 0) {
+                    cell.className = "cell star marked";
+                    cell.innerText = "★";
+                } else {
+                    cell.className = "cell";
+                    cell.innerText = number < 10 ? "0" + number : number;
+                    cell.id = "cell-" + number;
+                    cell.onclick = () => {
+                        if (drawnHistory.includes(number)) {
+                            cell.classList.toggle("marked");
+                        }
+                    };
+                }
+                grid.appendChild(cell);
+            }
         }
-    </script>
+    }
+
+    socket.on("number_drawn", (data) => {
+        drawnHistory.push(data.number);
+        const display = data.display || (data.number < 10 ? "0" + data.number : data.number);
+        document.getElementById("drawn-box").innerText = display;
+
+        const isAutoMark = document.getElementById("automark-toggle").checked;
+        if (isAutoMark) {
+            markNumber(data.number);
+        }
+    });
+
+    function markNumber(number) {
+        const cell = document.getElementById("cell-" + number);
+        if (cell) cell.classList.add("marked");
+    }
+
+    socket.on("game_started", () => { drawnHistory = []; });
+    socket.on("game_finished", () => alert("🎱 All 75 numbers have been called."));
+
+    socket.on("game_over", (data) => {
+        if (data.winner === socket.id) {
+            alert(data.fullCard ? "🏆 BINGO!\n\n🎁 FULL CARTELA BONUS!" : "🏆 BINGO!\n\nYou completed 2 lines!");
+        } else {
+            alert("🏆 GAME OVER!\n\nAnother player won.");
+        }
+    });
+
+    socket.on("false_alarm", (data) => alert(data.message));
+
+    function claimBingo() { socket.emit("claim_bingo"); }
+
+    function backToCartelas() {
+        document.getElementById("game-screen").style.display = "none";
+        document.getElementById("cartela-screen").style.display = "block";
+        socket.emit("request_cartelas");
+    }
+</script>
 </body>
 </html>
