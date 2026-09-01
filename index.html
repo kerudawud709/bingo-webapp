@@ -61,6 +61,22 @@
             cursor: not-allowed;
         }
         #game-screen { display: none; }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 340px;
+            margin: 0 auto 15px auto;
+        }
+        .prize-badge {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #ffffff;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+        }
         .card-number { font-size: 1rem; font-weight: bold; margin-bottom: 12px; }
         .drawn-container {
             background: #1e293b;
@@ -125,10 +141,10 @@
             background: #475569;
             color: white;
             border: none;
-            padding: 10px 16px;
+            padding: 8px 14px;
             border-radius: 8px;
-            margin-bottom: 15px;
             cursor: pointer;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -146,7 +162,13 @@
     </div>
 
     <div id="game-screen">
-        <button class="back-button" onclick="backToCartelas()">← Change Cartela</button>
+        <div class="top-bar">
+            <button class="back-button" onclick="backToCartelas()">← Change</button>
+            <div class="prize-badge">
+                🏆 Win: $<span id="prize-amount">0.00</span>
+            </div>
+        </div>
+
         <div id="selected-card-number" class="card-number">Cartela --</div>
 
         <div class="drawn-container">
@@ -176,10 +198,8 @@
             }
         });
 
-        socket.on("authentication_success", (data) => {
-            if (data.isAdmin) {
-                document.getElementById("admin-start-btn").style.display = "block";
-            }
+        socket.on("prize_pool_update", (data) => {
+            document.getElementById("prize-amount").innerText = parseFloat(data.prize).toFixed(2);
         });
 
         function adminStartGame() {
@@ -236,7 +256,6 @@
             const grid = document.getElementById("bingo-grid");
             grid.innerHTML = "";
 
-            // Render B-I-N-G-O Headers
             ['B', 'I', 'N', 'G', 'O'].forEach(letter => {
                 const headerCell = document.createElement("div");
                 headerCell.className = "header-cell";
@@ -244,7 +263,6 @@
                 grid.appendChild(headerCell);
             });
 
-            // Render Card Numbers
             for (let row = 0; row < 5; row++) {
                 for (let col = 0; col < 5; col++) {
                     const number = myCard[row][col];
