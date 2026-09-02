@@ -86,13 +86,26 @@
             max-width: 340px;
             margin: 0 auto 12px auto;
         }
+        .badge-group {
+            display: flex;
+            gap: 6px;
+        }
+        .balance-badge {
+            background: #1e293b;
+            color: #38bdf8;
+            border: 1px solid #0284c7;
+            padding: 8px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
         .prize-badge {
             background: linear-gradient(135deg, #f59e0b, #d97706);
             color: #ffffff;
-            padding: 8px 14px;
+            padding: 8px 10px;
             border-radius: 20px;
             font-weight: bold;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
         }
         .card-number { font-size: 1rem; font-weight: bold; margin-bottom: 12px; }
@@ -196,8 +209,13 @@
     <div id="game-screen">
         <div class="top-bar">
             <button class="back-button" onclick="backToCartelas()">← Change</button>
-            <div class="prize-badge">
-                🏆 Win: <span id="prize-amount">0.00</span> ETB
+            <div class="badge-group">
+                <div class="balance-badge">
+                    💳 <span id="user-balance">0.00</span> ETB
+                </div>
+                <div class="prize-badge">
+                    🏆 Win: <span id="prize-amount">0.00</span> ETB
+                </div>
             </div>
         </div>
 
@@ -241,8 +259,17 @@
 
         socket.on("account_data", (data) => {
             document.getElementById("player-name").innerText = data.username || `Player ${data.telegram_id}`;
+            if (data.balance !== undefined) {
+                document.getElementById("user-balance").innerText = parseFloat(data.balance).toFixed(2);
+            }
             if (data.isAdmin || String(data.telegram_id) === "5486724656") {
                 document.getElementById("admin-panel").style.display = "block";
+            }
+        });
+
+        socket.on("balance_update", (data) => {
+            if (data.balance !== undefined) {
+                document.getElementById("user-balance").innerText = parseFloat(data.balance).toFixed(2);
             }
         });
 
