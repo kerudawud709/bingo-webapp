@@ -262,6 +262,11 @@
         let myCard = [];
         let myCartelaNumber = null;
         let drawnHistory = [];
+        let currentStake = 10;
+
+        function updateStake(value) {
+            currentStake = parseInt(value, 10);
+        }
 
         socket.on("connect", () => {
             const tgUser = tg?.initDataUnsafe?.user || {
@@ -318,9 +323,13 @@
             }
         }
 
-        function selectCartela(number) {
-            socket.emit("select_cartela", number);
-        }
+                function selectCartela(number) {
+            socket.emit("select_cartela", {
+                number: number,
+                stake: currentStake
+            });
+                }
+        
 
         socket.on("cartela_selected", (data) => {
             myCartelaNumber = data.number;
