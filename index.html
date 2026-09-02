@@ -201,10 +201,25 @@
         </div>
     </div>
 
-    <div id="cartela-screen">
+        <div id="cartela-screen">
         <div class="selection-title">🎫 Choose Your Cartela</div>
+
+        <!-- STAKE SELECTION DROPDOWN -->
+        <div style="background: #1e293b; padding: 10px; border-radius: 10px; max-width: 340px; margin: 0 auto 12px auto; border: 1px solid #334155;">
+            <label for="stake-select" style="font-weight: bold; font-size: 0.85rem; color: #38bdf8; display: block; margin-bottom: 6px;">
+                💰 Select Stake Amount:
+            </label>
+            <select id="stake-select" onchange="updateStake(this.value)" style="width: 100%; padding: 8px; background: #0f172a; color: white; border: 1px solid #0284c7; border-radius: 6px; font-weight: bold; font-size: 0.95rem;">
+                <option value="10" selected>10 ETB</option>
+                <option value="20">20 ETB</option>
+                <option value="50">50 ETB</option>
+                <option value="100">100 ETB</option>
+            </select>
+        </div>
+
         <div id="cartela-grid" class="cartela-grid"></div>
     </div>
+
 
     <div id="game-screen">
         <div class="top-bar">
