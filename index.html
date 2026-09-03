@@ -208,13 +208,20 @@
         <div style="background: #1e293b; padding: 10px; border-radius: 10px; max-width: 340px; margin: 0 auto 12px auto; border: 1px solid #334155;">
             <label for="stake-select" style="font-weight: bold; font-size: 0.85rem; color: #38bdf8; display: block; margin-bottom: 6px;">
                 💰 Select Stake Amount:
+                    <!-- CUSTOM STAKE INPUT -->
+        <div style="background: #1e293b; padding: 10px; border-radius: 10px; max-width: 340px; margin: 0 auto 12px auto; border: 1px solid #334155;">
+            <label for="stake-input" style="font-weight: bold; font-size: 0.85rem; color: #38bdf8; display: block; margin-bottom: 6px;">
+                💰 Enter Stake Amount (Min 5 ETB):
             </label>
-            <select id="stake-select" onchange="updateStake(this.value)" style="width: 100%; padding: 8px; background: #0f172a; color: white; border: 1px solid #0284c7; border-radius: 6px; font-weight: bold; font-size: 0.95rem;">
-                <option value="10" selected>10 ETB</option>
-                <option value="20">20 ETB</option>
-                <option value="50">50 ETB</option>
-                <option value="100">100 ETB</option>
-            </select>
+            <input 
+                type="number" 
+                id="stake-input" 
+                min="5" 
+                value="10" 
+                placeholder="Enter amount (min 5)" 
+                oninput="updateStake(this.value)"
+                style="width: 90%; padding: 8px; background: #0f172a; color: white; border: 1px solid #0284c7; border-radius: 6px; font-weight: bold; font-size: 1rem; text-align: center;"
+            >
         </div>
 
         <div id="cartela-grid" class="cartela-grid"></div>
