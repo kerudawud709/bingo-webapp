@@ -338,14 +338,19 @@
                 }
         
 
-        socket.on("cartela_selected", (data) => {
-            myCartelaNumber = data.number;
-            myCard = data.card;
-            document.getElementById("selected-card-number").innerText = "🎫 Cartela " + myCartelaNumber;
-            document.getElementById("cartela-screen").style.display = "none";
-            document.getElementById("game-screen").style.display = "block";
-            renderGrid();
+                socket.on('cartela_selected', (data) => {
+            // 1. Hide cartela selection screen
+            document.getElementById('cartela-screen').style.display = 'none';
+
+            // 2. Show game board screen
+            document.getElementById('game-screen').style.display = 'block';
+
+            // 3. Render your 5x5 bingo card matrix
+            if (data.card && typeof renderBingoCard === 'function') {
+                renderBingoCard(data.card);
+            }
         });
+
 
         socket.on("cartela_availability", (data) => {
             if (document.getElementById("cartela-screen").style.display !== "none") {
