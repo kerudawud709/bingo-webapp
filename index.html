@@ -201,14 +201,11 @@
         </div>
     </div>
 
-        <div id="cartela-screen">
+    <!-- CARTELA SELECTION SCREEN -->
+    <div id="cartela-screen">
         <div class="selection-title">🎫 Choose Your Cartela</div>
 
-        <!-- STAKE SELECTION DROPDOWN -->
-        <div style="background: #1e293b; padding: 10px; border-radius: 10px; max-width: 340px; margin: 0 auto 12px auto; border: 1px solid #334155;">
-            <label for="stake-select" style="font-weight: bold; font-size: 0.85rem; color: #38bdf8; display: block; margin-bottom: 6px;">
-                💰 Select Stake Amount:
-                    <!-- CUSTOM STAKE INPUT -->
+        <!-- CUSTOM STAKE INPUT -->
         <div style="background: #1e293b; padding: 10px; border-radius: 10px; max-width: 340px; margin: 0 auto 12px auto; border: 1px solid #334155;">
             <label for="stake-input" style="font-weight: bold; font-size: 0.85rem; color: #38bdf8; display: block; margin-bottom: 6px;">
                 💰 Enter Stake Amount (Min 5 ETB):
@@ -227,7 +224,7 @@
         <div id="cartela-grid" class="cartela-grid"></div>
     </div>
 
-
+    <!-- GAME BOARD SCREEN -->
     <div id="game-screen">
         <div class="top-bar">
             <button class="back-button" onclick="backToCartelas()">← Change</button>
@@ -272,7 +269,10 @@
         let currentStake = 10;
 
         function updateStake(value) {
-            currentStake = parseInt(value, 10);
+            const amount = parseFloat(value);
+            if (!isNaN(amount)) {
+                currentStake = amount;
+            }
         }
 
         socket.on("connect", () => {
@@ -291,6 +291,12 @@
             }
             if (data.isAdmin || String(data.telegram_id) === "5486724656") {
                 document.getElementById("admin-panel").style.display = "block";
+            }
+        });
+
+        socket.on("balance_updated", (data) => {
+            if (data.balance !== undefined) {
+                document.getElementById("user-balance").innerText = parseFloat(data.balance).toFixed(2);
             }
         });
 
@@ -330,27 +336,31 @@
             }
         }
 
-                function selectCartela(number) {
+        function selectCartela(number) {
+            if (currentStake < 5) {
+                alert("⚠️ Minimum stake amount is 5 ETB!");
+                return;
+            }
+
             socket.emit("select_cartela", {
                 number: number,
                 stake: currentStake
             });
-                }
-        
+        }
 
-                socket.on('cartela_selected', (data) => {
-            // 1. Hide cartela selection screen
+        socket.on('cartela_selected', (data) => {
+            myCartelaNumber = data.number;
+            myCard = data.card;
+
+            document.getElementById('selected-card-number').innerText = "Cartela #" + data.number;
+
+            // Hide selection screen, show game screen
             document.getElementById('cartela-screen').style.display = 'none';
-
-            // 2. Show game board screen
             document.getElementById('game-screen').style.display = 'block';
 
-            // 3. Render your 5x5 bingo card matrix
-            if (data.card && typeof renderBingoCard === 'function') {
-                renderBingoCard(data.card);
-            }
+            // Render bingo grid
+            renderBingoCard(data.card);
         });
-
 
         socket.on("cartela_availability", (data) => {
             if (document.getElementById("cartela-screen").style.display !== "none") {
@@ -360,7 +370,7 @@
 
         socket.on("cartela_error", (data) => alert(data.message));
 
-        function renderGrid() {
+        function renderBingoCard(cardMatrix) {
             const grid = document.getElementById("bingo-grid");
             grid.innerHTML = "";
 
@@ -373,7 +383,7 @@
 
             for (let row = 0; row < 5; row++) {
                 for (let col = 0; col < 5; col++) {
-                    const number = myCard[row][col];
+                    const number = cardMatrix[row][col];
                     const cell = document.createElement("div");
 
                     if (number === 0) {
