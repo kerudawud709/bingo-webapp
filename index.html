@@ -261,9 +261,11 @@
         </div>
 
         <div class="toggle-container">
-            <span>Manual Tap</span>
+            <span>Manual</span>
             <input type="checkbox" id="automark-toggle" checked>
-            <span>Auto-Mark ⚡</span>
+            <span>Auto ⚡</span>
+            <span style="margin-left: 8px;">🎙️ Voice</span>
+            <input type="checkbox" id="voice-toggle" checked>
         </div>
 
         <div id="selected-card-number" class="card-number">Cartela --</div>
@@ -281,6 +283,72 @@
     <script>
         const tg = window.Telegram?.WebApp;
         if (tg) tg.expand();
+
+        // WEB AUDIO CONTEXT FOR SFX
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let currentVoiceAudio = null;
+
+        function getLetterForNumber(num) {
+            if (num <= 15) return 'B';
+            if (num <= 30) return 'I';
+            if (num <= 45) return 'N';
+            if (num <= 60) return 'G';
+            return 'O';
+        }
+
+        // PLAY AMHARIC VOICE CLIP FROM GITHUB REPO
+        function playVoiceCall(num) {
+            if (!document.getElementById("voice-toggle").checked) return;
+
+            if (currentVoiceAudio) {
+                currentVoiceAudio.pause();
+                currentVoiceAudio.currentTime = 0;
+            }
+
+            const letter = getLetterForNumber(num);
+            const audioUrl = `https://raw.githubusercontent.com/kerudawud709/bingo-webapp/main/audio/${letter}${num}.mp3`;
+
+            currentVoiceAudio = new Audio(audioUrl);
+            currentVoiceAudio.play().catch((err) => {
+                console.warn("Audio play blocked or file missing:", err);
+            });
+        }
+
+        function playPopSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.08);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.08);
+        }
+
+        function playWinSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const notes = [523.25, 659.25, 783.99, 1046.50];
+            notes.forEach((freq, index) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime + index * 0.12);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime + index * 0.12);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + index * 0.12 + 0.3);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(audioCtx.currentTime + index * 0.12);
+                osc.stop(audioCtx.currentTime + index * 0.12 + 0.3);
+            });
+        }
 
         const socket = io("https://bingo-backend-7rt0.onrender.com");
 
@@ -437,6 +505,7 @@
                         cell.onclick = () => {
                             if (drawnHistory.includes(number)) {
                                 cell.classList.toggle("marked");
+                                playPopSound();
                             }
                         };
                     }
@@ -450,6 +519,8 @@
             const display = data.display || (data.number < 10 ? "0" + data.number : data.number);
             document.getElementById("drawn-box").innerText = display;
 
+            playVoiceCall(data.number);
+
             const isAutoMark = document.getElementById("automark-toggle").checked;
             if (isAutoMark) {
                 markNumber(data.number);
@@ -458,7 +529,10 @@
 
         function markNumber(number) {
             const cell = document.getElementById("cell-" + number);
-            if (cell) cell.classList.add("marked");
+            if (cell) {
+                cell.classList.add("marked");
+                playPopSound();
+            }
         }
 
         socket.on("game_started", () => { drawnHistory = []; });
@@ -466,6 +540,7 @@
 
         socket.on("game_over", (data) => {
             if (data.winner === socket.id) {
+                playWinSound();
                 alert(data.fullCard ? "🏆 BINGO!\n\n🎁 FULL CARTELA BONUS!" : "🏆 BINGO!\n\nYou completed 2 lines!");
             } else {
                 alert("🏆 GAME OVER!\n\nAnother player won.");
@@ -477,10 +552,4 @@
         function claimBingo() { socket.emit("claim_bingo"); }
 
         function backToCartelas() {
-            document.getElementById("game-screen").style.display = "none";
-            document.getElementById("cartela-screen").style.display = "block";
-            socket.emit("request_cartelas");
-        }
-    </script>
-</body>
-</html>
+            document.getElementById("game-screen").style.display = "non
