@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yeketema Bingo</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
@@ -351,12 +351,12 @@
         }
 
         const socket = io("https://bingo-backend-7rt0.onrender.com", {
-    transports: ["websocket", "polling"],
-    reconnection: true,
-    reconnectionAttempts: 10,
-    reconnectionDelay: 2000
-});
-
+            transports: ["polling", "websocket"],
+            upgrade: true,
+            reconnection: true,
+            reconnectionAttempts: 10,
+            reconnectionDelay: 2000
+        });
 
         let myCard = [];
         let myCartelaNumber = null;
@@ -541,21 +541,16 @@
             }
         }
 
+        function backToCartelas() {
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('cartela-screen').style.display = 'block';
+            socket.emit('request_cartelas');
+        }
+
         socket.on("game_started", () => { drawnHistory = []; });
         socket.on("game_finished", () => alert("🎱 All 75 numbers have been called."));
 
         socket.on("game_over", (data) => {
             if (data.winner === socket.id) {
                 playWinSound();
-                alert(data.fullCard ? "🏆 BINGO!\n\n🎁 FULL CARTELA BONUS!" : "🏆 BINGO!\n\nYou completed 2 lines!");
-            } else {
-                alert("🏆 GAME OVER!\n\nAnother player won.");
-            }
-        });
-
-        socket.on("false_alarm", (data) => alert(data.message));
-
-        function claimBingo() { socket.emit("claim_bingo"); }
-
-        function backToCartelas() {
-            document.getElementById("game-screen").style.display = "non
+                alert(d
